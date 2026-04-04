@@ -1,6 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Zap, ArrowRight, Command, Activity, Dumbbell, Flame, Moon, CheckCircle, Circle, X, CheckCircle2, CircleDashed, Save, Loader2, Trash2 } from 'lucide-react';
+import ScrollFloat from './ScrollFloat';
+import SplitText from './SplitText';
+import GradientText from './GradientText';
 
 // --- 全局样式与 CSS 变量注入 ---
 const globalStyles = `
@@ -202,19 +205,19 @@ const ExerciseMiniIcon = ({ name }) => {
 export default function App() {
   const [currentView, setCurrentView] = useState('home'); 
   const [selectedDay, setSelectedDay] = useState(null);
-  const [completedDays, setCompletedDays] = useState([]);
-  const [saveStatus, setSaveStatus] = useState('saved'); // 'saved', 'saving'
   
-  // --- 交互状态 ---
+  const [completedDays, setCompletedDays] = useState([]);
+  const [saveStatus, setSaveStatus] = useState('saved'); 
+  
   const [isPastHero, setIsPastHero] = useState(false);
   const [isNavHovered, setIsNavHovered] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   
-  const isNavExpanded = !isPastHero || isNavHovered || isDropdownOpen || isSettingsOpen;
+  const isNavExpanded = !isPastHero || isNavHovered || isDropdownOpen || isSettingsOpen || isMobileNavOpen;
   const lenisRef = useRef(null);
 
-  // --- 初始化：从浏览器本地存储加载进度 ---
   useEffect(() => {
     const localData = localStorage.getItem('liquid-fit-data-v1');
     if (localData) {
@@ -276,7 +279,10 @@ export default function App() {
       initLenis();
     }
 
-    const handleScroll = () => setIsPastHero(window.scrollY > 300);
+    const handleScroll = () => {
+      setIsPastHero(window.scrollY > 300);
+      setIsMobileNavOpen(false);
+    };
     window.addEventListener('scroll', handleScroll);
 
     return () => {
@@ -287,6 +293,8 @@ export default function App() {
   }, []);
 
   const scrollToDay = (day) => {
+    setIsDropdownOpen(false);
+    setIsMobileNavOpen(false);
     if (currentView !== 'home') {
       setCurrentView('home');
       setTimeout(() => {
@@ -345,11 +353,14 @@ export default function App() {
         <div className="absolute bottom-[-20%] left-[20%] w-[60vw] h-[60vw] rounded-full bg-cyan-50 mix-blend-multiply filter blur-[120px] opacity-60 animate-blob animation-delay-4000"></div>
       </div>
 
-      <nav onMouseEnter={() => setIsNavHovered(true)} onMouseLeave={() => setIsNavHovered(false)}
-        className={`fixed top-6 left-1/2 -translate-x-1/2 z-40 backdrop-blur-2xl saturate-180 bg-white/40 border border-white/40 rounded-full shadow-lg h-14 flex items-center transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${isNavExpanded ? 'w-11/12 max-w-2xl px-2 sm:px-6 justify-between' : 'w-14 justify-center cursor-pointer delay-100'}`}
+      <nav 
+        onMouseEnter={() => setIsNavHovered(true)} 
+        onMouseLeave={() => { setIsNavHovered(false); setIsMobileNavOpen(false); }}
+        onClick={() => { if (isPastHero && !isNavExpanded) setIsMobileNavOpen(true); }}
+        className={`fixed top-4 sm:top-6 left-1/2 -translate-x-1/2 z-40 backdrop-blur-2xl saturate-180 bg-white/40 border border-white/40 rounded-full shadow-lg h-12 sm:h-14 flex items-center transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${isNavExpanded ? 'w-[95%] sm:w-11/12 max-w-2xl px-3 sm:px-6 justify-between' : 'w-12 sm:w-14 justify-center cursor-pointer delay-100'}`}
       >
-        <div className={`flex items-center gap-2 text-[var(--text-primary)] group flex-shrink-0 transition-all duration-500 z-20 ${!isNavExpanded ? 'justify-center w-full' : 'pl-2 cursor-pointer'}`} onClick={() => { setCurrentView('home'); lenisRef.current?.scrollTo(0); }}>
-          <Command className="w-6 h-6 transition-transform duration-500 group-hover:rotate-90 flex-shrink-0" />
+        <div className={`flex items-center gap-2 text-[var(--text-primary)] group flex-shrink-0 transition-all duration-500 z-20 ${!isNavExpanded ? 'justify-center w-full' : 'pl-2 cursor-pointer'}`} onClick={(e) => { e.stopPropagation(); setCurrentView('home'); lenisRef.current?.scrollTo(0); }}>
+          <Command className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-500 group-hover:rotate-90 flex-shrink-0" />
           <AnimatePresence>
               {isNavExpanded && (<motion.span initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 'auto' }} exit={{ opacity: 0, width: 0 }} className="font-semibold tracking-tight text-lg hidden sm:block whitespace-nowrap overflow-hidden">Liquid Fit</motion.span>)}
           </AnimatePresence>
@@ -357,24 +368,54 @@ export default function App() {
         
         <AnimatePresence>
           {isNavExpanded && (
-            <motion.div initial={{ opacity: 0, filter: 'blur(8px)', scale: 0.95 }} animate={{ opacity: 1, filter: 'blur(0px)', scale: 1 }} exit={{ opacity: 0, filter: 'blur(8px)', scale: 0.95 }} transition={{ duration: 0.3 }} className="flex gap-2 sm:gap-6 text-sm font-semibold text-[var(--text-secondary)] h-full items-center absolute left-1/2 -translate-x-1/2 whitespace-nowrap z-10">
-              <div className="relative group flex items-center h-full px-2" onMouseEnter={() => setIsDropdownOpen(true)} onMouseLeave={() => setIsDropdownOpen(false)}>
-                <span className={`cursor-pointer hover:text-[var(--text-primary)] transition-colors duration-300 ${currentView === 'home' ? 'text-[var(--text-primary)]' : ''}`} onClick={() => setCurrentView('home')}>计划概览</span>
-                <div className="absolute top-[90%] left-1/2 -translate-x-1/2 w-[80vw] sm:w-[50vw] bg-white/80 backdrop-blur-3xl border border-white/50 rounded-3xl shadow-2xl flex-col p-4 max-h-[60vh] overflow-y-auto no-scrollbar overscroll-contain opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 origin-top scale-95 group-hover:scale-100 hidden sm:flex" data-lenis-prevent="true">
-                    {planData.map(d => (
-                        <div key={d.day} onClick={() => { scrollToDay(d.day); setIsDropdownOpen(false); }} className="px-6 py-4 rounded-2xl hover:bg-black/5 cursor-pointer transition-colors flex justify-between items-center group/item">
-                            <span className="font-black italic tracking-tighter text-2xl sm:text-4xl text-[var(--text-primary)] opacity-80 group-hover/item:opacity-100 group-hover/item:text-[var(--accent-color)] uppercase transform -skew-x-6 transition-all">DAY {d.day}</span>
-                            {completedDays.includes(d.day) ? (<CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-[var(--accent-color)] transition-transform group-hover/item:scale-110" />) : (<Circle className="w-6 h-6 sm:w-8 sm:h-8 text-gray-300 opacity-50 transition-transform group-hover/item:scale-110" />)}
-                        </div>
-                    ))}
-                </div>
+            <motion.div initial={{ opacity: 0, filter: 'blur(8px)', scale: 0.95 }} animate={{ opacity: 1, filter: 'blur(0px)', scale: 1 }} exit={{ opacity: 0, filter: 'blur(8px)', scale: 0.95 }} transition={{ duration: 0.3 }} className="flex gap-3 sm:gap-6 text-xs sm:text-sm font-semibold text-[var(--text-secondary)] h-full items-center absolute left-1/2 -translate-x-1/2 whitespace-nowrap z-10">
+              
+              <div className="relative flex items-center h-full px-1 sm:px-2" onMouseEnter={() => setIsDropdownOpen(true)} onMouseLeave={() => setIsDropdownOpen(false)}>
+                <span className={`cursor-pointer hover:text-[var(--text-primary)] transition-colors duration-300 ${currentView === 'home' ? 'text-[var(--text-primary)]' : ''}`} 
+                      onClick={(e) => { e.stopPropagation(); setCurrentView('home'); setIsDropdownOpen(!isDropdownOpen); setIsSettingsOpen(false); }}>计划概览</span>
+                
+                <AnimatePresence>
+                    {isDropdownOpen && (
+                        <motion.div 
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                            /* 这里将 absolute 改为 fixed，并设置 top 值，确保它始终在页面正中间占据 1/2 宽度 */
+                            className="fixed top-[70px] sm:top-[90px] left-1/2 -translate-x-1/2 w-[92vw] sm:w-[50vw] bg-white/90 backdrop-blur-3xl border border-white/50 rounded-3xl shadow-2xl flex flex-col p-4 max-h-[65vh] overflow-y-auto no-scrollbar overscroll-contain z-50" 
+                            data-lenis-prevent="true"
+                        >
+                            {planData.map(d => (
+                                <div key={d.day} onClick={(e) => { e.stopPropagation(); scrollToDay(d.day); }} className="px-6 py-4 rounded-2xl hover:bg-black/5 cursor-pointer transition-colors flex justify-between items-center group/item">
+                                    <span className="font-black italic tracking-tighter text-2xl sm:text-4xl text-[var(--text-primary)] opacity-80 group-hover/item:opacity-100 group-hover/item:text-[var(--accent-color)] uppercase transform -skew-x-6 transition-all">DAY {d.day}</span>
+                                    {completedDays.includes(d.day) ? (<CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-[var(--accent-color)] transition-transform group-hover/item:scale-110" />) : (<Circle className="w-6 h-6 sm:w-8 sm:h-8 text-gray-300 opacity-50 transition-transform group-hover/item:scale-110" />)}
+                                </div>
+                            ))}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
               </div>
-              <div className="flex items-center h-full px-2"><span className={`cursor-pointer hover:text-[var(--text-primary)] transition-colors duration-300 ${currentView === 'records' ? 'text-[var(--text-primary)]' : ''}`} onClick={() => { setCurrentView('records'); lenisRef.current?.scrollTo(0); }}>打卡记录</span></div>
-              <div className="relative group flex items-center h-full px-2" onMouseEnter={() => setIsSettingsOpen(true)} onMouseLeave={() => setIsSettingsOpen(false)}>
-                <span className="cursor-pointer hover:text-[var(--text-primary)] transition-colors duration-300">设置</span>
-                <div className="absolute top-[90%] left-1/2 -translate-x-1/2 w-48 bg-white/80 backdrop-blur-3xl border border-white/50 rounded-2xl shadow-2xl flex-col p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 origin-top scale-95 group-hover:scale-100 hidden sm:flex">
-                    <div onClick={handleClearAll} className="px-4 py-3 rounded-xl hover:bg-red-50 cursor-pointer transition-colors flex items-center gap-2 group/item"><Trash2 className="w-4 h-4 text-red-500 opacity-80 group-hover/item:opacity-100" /><span className="font-semibold text-sm text-red-500 opacity-80 group-hover/item:opacity-100">一键清空计划</span></div>
-                </div>
+
+              <div className="flex items-center h-full px-1 sm:px-2">
+                <span className={`cursor-pointer hover:text-[var(--text-primary)] transition-colors duration-300 ${currentView === 'records' ? 'text-[var(--text-primary)]' : ''}`} 
+                      onClick={(e) => { e.stopPropagation(); setCurrentView('records'); lenisRef.current?.scrollTo(0); setIsMobileNavOpen(false); setIsDropdownOpen(false); setIsSettingsOpen(false); }}>打卡记录</span>
+              </div>
+
+              <div className="relative flex items-center h-full px-1 sm:px-2" onMouseEnter={() => setIsSettingsOpen(true)} onMouseLeave={() => setIsSettingsOpen(false)}>
+                <span className="cursor-pointer hover:text-[var(--text-primary)] transition-colors duration-300"
+                      onClick={(e) => { e.stopPropagation(); setIsSettingsOpen(!isSettingsOpen); setIsDropdownOpen(false); }}>设置</span>
+                <AnimatePresence>
+                    {isSettingsOpen && (
+                        <motion.div 
+                            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+                            className="absolute top-[110%] left-1/2 -translate-x-1/2 w-48 bg-white/90 backdrop-blur-3xl border border-white/50 rounded-2xl shadow-2xl flex-col p-2 z-50"
+                        >
+                            <div onClick={(e) => { e.stopPropagation(); handleClearAll(); }} className="px-4 py-3 rounded-xl hover:bg-red-50 cursor-pointer transition-colors flex items-center gap-2 group/item">
+                                <Trash2 className="w-4 h-4 text-red-500 opacity-80 group-hover/item:opacity-100" />
+                                <span className="font-semibold text-sm text-red-500 opacity-80 group-hover/item:opacity-100">一键清空计划</span>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
               </div>
             </motion.div>
           )}
@@ -382,25 +423,67 @@ export default function App() {
 
         <AnimatePresence>
           {isNavExpanded && (
-            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/50 border border-white/60 text-[var(--accent-color)] text-xs font-bold shadow-sm whitespace-nowrap flex-shrink-0 z-20">
-              {saveStatus === 'saving' && <Loader2 className="w-3 h-3 animate-spin text-blue-500" />}
-              {saveStatus === 'saved' && <Save className="w-3 h-3 text-green-500" title="已本地保存" />}
-              <span>进度 {progressPercentage}%</span>
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }} className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-white/50 border border-white/60 text-[var(--accent-color)] text-[10px] sm:text-xs font-bold shadow-sm whitespace-nowrap flex-shrink-0 z-20">
+              {saveStatus === 'saving' && <Loader2 className="w-3 h-3 sm:w-3 sm:h-3 animate-spin text-blue-500" />}
+              {saveStatus === 'saved' && <Save className="w-3 h-3 sm:w-3 sm:h-3 text-green-500" title="已本地保存" />}
+              <span className="hidden sm:inline">进度 {progressPercentage}%</span>
+              <span className="sm:hidden">{progressPercentage}%</span>
             </motion.div>
           )}
         </AnimatePresence>
       </nav>
 
-      <main className="relative z-10 pt-32 sm:pt-40 px-6 max-w-7xl mx-auto min-h-screen">
+      <main className="relative z-10 pt-20 sm:pt-24 px-6 max-w-7xl mx-auto">
         <AnimatePresence mode="wait">
             {currentView === 'home' && (
                 <motion.div key="home" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}>
-                    <section className="flex flex-col items-center justify-center text-center pb-20">
-                        <FadeIn><div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/40 bg-white/30 backdrop-blur-xl mb-8 text-sm font-medium text-[var(--text-secondary)] shadow-sm"><Sparkles className="w-4 h-4 text-[var(--accent-color)]" /><span>清爽薄肌 · 专属定制</span></div></FadeIn>
-                        <FadeIn delay={0.1}>
-                            <div className="mb-6 max-w-4xl mx-auto"><TrueFocus sentence="30 天蜕变" manualMode={false} blurAmount={5} borderColor="#06b6d4" glowColor="rgba(6, 182, 212, 0.6)" animationDuration={0.6} pauseBetweenAnimations={1.5} /></div>
+                    {/* Hero Section - 主标题区域 */}
+                    <section className="flex flex-col items-center justify-center text-center relative px-6 py-16 sm:py-20">
+                        <FadeIn className="mb-6">
+                            <SplitText
+                                text="清爽薄肌 · 专属定制"
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/40 bg-white/30 backdrop-blur-xl text-sm font-medium text-[var(--text-secondary)] shadow-sm"
+                                tag="div"
+                                delay={30}
+                                duration={0.8}
+                                ease="power2.out"
+                                splitType="chars"
+                                from={{ opacity: 0, y: -20, scale: 0.9 }}
+                                to={{ opacity: 1, y: 0, scale: 1 }}
+                                threshold={0}
+                                rootMargin="0px"
+                                textAlign="center"
+                            />
                         </FadeIn>
-                        <FadeIn delay={0.2}><p className="text-lg sm:text-xl text-[var(--text-secondary)] max-w-2xl mx-auto mb-10 leading-relaxed font-light">居家无器械，隔天循环，精准雕刻核心线条。<br className="hidden sm:block" />保持专注，享受每一次流汗的瞬间。</p></FadeIn>
+                        <FadeIn delay={0.15} className="w-full">
+                            <GradientText
+                                colors={["#0071e3", "#00c6ff", "#0071e3"]}
+                                animationSpeed={6}
+                                showBorder={false}
+                                className="text-[clamp(3rem,12vw,10rem)] font-black tracking-tight"
+                            >
+                                30 天蜕变
+                            </GradientText>
+                        </FadeIn>
+                    </section>
+
+                    {/* Hero2 Section - ScrollFloat 动画区域 */}
+                    <section className="flex flex-col items-center justify-center text-center min-h-screen relative px-6">
+                        <div className="pb-20 max-w-2xl mx-auto">
+                            <FadeIn delay={0.2}>
+                                <ScrollFloat
+                                    animationDuration={2}
+                                    ease='power2.out'
+                                    scrollStart='top center+=200'
+                                    scrollEnd='bottom top+=100'
+                                    stagger={0.04}
+                                    scrub={1}
+                                    textClassName="text-lg sm:text-xl font-light"
+                                >
+                                    居家无器械，隔天循环，精准雕刻核心线条。保持专注，享受每一次流汗的瞬间。
+                                </ScrollFloat>
+                            </FadeIn>
+                        </div>
                     </section>
                     <section className="mb-20"><div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">{planData.map((data, index) => (<FadeIn key={data.day} delay={(index % 10) * 0.05} className="h-full">{renderCard(data)}</FadeIn>))}</div></section>
                 </motion.div>

@@ -421,6 +421,7 @@ export default function App() {
         </AnimatePresence>
       </main>
 
+      {/* Footer - 创作者信息 */}
       <footer className="relative z-10 py-8 px-6 text-center">
         <div className="backdrop-blur-2xl saturate-180 bg-white/30 border border-white/40 rounded-2xl max-w-md mx-auto py-4 px-6 shadow-lg">
           <p className="text-sm font-medium text-[var(--text-secondary)]">

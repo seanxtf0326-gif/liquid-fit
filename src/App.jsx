@@ -421,6 +421,14 @@ export default function App() {
         </AnimatePresence>
       </main>
 
+      <footer className="relative z-10 py-8 px-6 text-center">
+        <div className="backdrop-blur-2xl saturate-180 bg-white/30 border border-white/40 rounded-2xl max-w-md mx-auto py-4 px-6 shadow-lg">
+          <p className="text-sm font-medium text-[var(--text-secondary)]">
+            创作者：<span className="font-bold text-[var(--accent-color)]">ARIES</span>
+          </p>
+        </div>
+      </footer>
+
       <AnimatePresence>
       {selectedDay && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">

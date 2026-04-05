@@ -4,6 +4,7 @@ import { Sparkles, Zap, ArrowRight, Command, Activity, Dumbbell, Flame, Moon, Ch
 import ScrollFloat from './ScrollFloat';
 import SplitText from './SplitText';
 import GradientText from './GradientText';
+import LoginPage from './LoginPage';
 
 // --- 全局样式与 CSS 变量注入 ---
 const globalStyles = `
@@ -215,8 +216,21 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  
   const isNavExpanded = !isPastHero || isNavHovered || isDropdownOpen || isSettingsOpen || isMobileNavOpen;
   const lenisRef = useRef(null);
+
+  const handleLoginSuccess = () => {
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setIsLoggedIn(true);
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 500);
+    }, 800);
+  };
 
   useEffect(() => {
     const localData = localStorage.getItem('liquid-fit-data-v1');
@@ -340,6 +354,31 @@ export default function App() {
     <div className="relative min-h-screen overflow-hidden selection:bg-[var(--accent-color)] selection:text-white pb-20">
       <style>{globalStyles}</style>
 
+      {/* Login Page */}
+      {!isLoggedIn && (
+        <LoginPage onLoginSuccess={handleLoginSuccess} />
+      )}
+
+      {/* Transition Blur Overlay */}
+      <AnimatePresence>
+        {isTransitioning && (
+          <motion.div
+            initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+            animate={{ opacity: 1, backdropFilter: 'blur(20px)' }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8 }}
+            className="fixed inset-0 z-[60] bg-black/30 pointer-events-none"
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Main Content with blur during transition */}
+      <motion.div
+        animate={{ filter: isTransitioning ? 'blur(10px)' : 'blur(0px)' }}
+        transition={{ duration: 0.5 }}
+        className={isLoggedIn ? '' : 'pointer-events-none'}
+      >
+
       {/* --- 全屏沉浸式下拉模糊遮罩 --- */}
       <AnimatePresence>
         {(isDropdownOpen || isSettingsOpen) && (
@@ -438,7 +477,7 @@ export default function App() {
             {currentView === 'home' && (
                 <motion.div key="home" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}>
                     {/* Hero Section - 主标题区域 */}
-                    <section className="flex flex-col items-center justify-center text-center relative px-6 py-16 sm:py-20">
+                    <section className="flex flex-col items-center justify-center text-center relative px-6 pt-16 pb-32 sm:pt-20 sm:pb-44">
                         <FadeIn className="mb-6">
                             <SplitText
                                 text="清爽薄肌 · 专属定制"
@@ -544,6 +583,7 @@ export default function App() {
         </div>
       )}
       </AnimatePresence>
+      </motion.div>
     </div>
   );
 }
